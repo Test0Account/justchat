@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat - justchat.com</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="messages"></div>
+
+<div id="input">
+    <input type="text" id="msg" placeholder="[ Type a message here... ]" autocomplete="off" />
+</div>
+
+<script>
+    // Which server?
+    const urlParams = new URLSearchParams(window.location.search);
+    const room = urlParams.get("c") || "server1";
+
+    // Connect to the backend WebSocket server (Render will give you the URL)
+const ws = new WebSocket("wss://justchat-tcqh.onrender.com/" + room);
+
+    const messages = document.getElementById("messages");
+    const input = document.getElementById("msg");
+
+    ws.onmessage = (event) => {
+        messages.textContent += event.data + "\n";
+        window.scrollTo(0, document.body.scrollHeight);
+    };
+
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && input.value.trim() !== "") {
+            ws.send(input.value);
+            input.value = "";
+        }
+    });
+</script>
+
+</body>
+</html>
