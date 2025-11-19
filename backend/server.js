@@ -1,37 +1,26 @@
 const WebSocket = require("ws");
-const http = require("http");
+const server = new WebSocket.Server({ port: process.env.PORT || 3000 });
 
-// Create HTTP server (Render needs this)
-const server = http.createServer();
-
-const wss = new WebSocket.Server({ server });
-
-const rooms = {
+let rooms = {
     server1: new Set(),
     server2: new Set()
 };
 
-wss.on("connection", (socket, req) => {
-    const roomName = req.url.substring(1) || "server1";
-    const room = rooms[roomName] || rooms.server1;
+server.on("connection", (ws, req) => {
+    const url = req.url.replace("/", "");
+    const roomName = rooms[url] ? url : "server1";
 
-    room.add(socket);
+    rooms[roomName].add(ws);
 
-    socket.on("message", (msg) => {
-        for (const client of room) {
+    ws.on("message", (msg) => {
+        for (let client of rooms[roomName]) {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(msg.toString());
             }
         }
     });
 
-    socket.on("close", () => {
-        room.delete(socket);
+    ws.on("close", () => {
+        rooms[roomName].delete(ws);
     });
-});
-
-// Use Render port or fallback
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log("justchat backend running on port " + PORT);
 });
