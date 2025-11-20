@@ -19,7 +19,7 @@
     const room = new URLSearchParams(window.location.search).get("c") || "server1";
 
     // WebSocket backend
-const ws = new WebSocket("wss://justchat-ky2bmie7-test-accounts-projects-0ec6ab06.onrender.com/" + room);
+const ws = new WebSocket("wss://justchat-tcqh.onrender.com/" + room);
 
     const messages = document.getElementById("messages");
     const input = document.getElementById("msg");
