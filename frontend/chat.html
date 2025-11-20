@@ -15,18 +15,22 @@
 </div>
 
 <script>
-    // Room from URL
+    // Get room name
     const room = new URLSearchParams(window.location.search).get("c") || "server1";
 
-    // WebSocket backend
-const ws = new WebSocket("wss://justchat-tcqh.onrender.com/" + room);
+    // Connect to your Render backend (IMPORTANT)
+    const ws = new WebSocket("wss://justchat-backend.onrender.com/" + room);
 
     const messages = document.getElementById("messages");
     const input = document.getElementById("msg");
     const cooldownDisplay = document.getElementById("cooldown");
 
     let canSend = true;
-    let cooldown = 500; // 0.5s cooldown
+    let cooldown = 500;
+
+    ws.onopen = () => {
+        messages.textContent += "[SYSTEM] Connected.\n";
+    };
 
     ws.onmessage = (event) => {
         messages.textContent += event.data + "\n";
@@ -41,14 +45,12 @@ const ws = new WebSocket("wss://justchat-tcqh.onrender.com/" + room);
             canSend = false;
             let left = cooldown;
 
-            cooldownDisplay.textContent = `[ Cooldown: ${left}ms ]`;
-
-            const tick = setInterval(() => {
-                left -= 50;
+            const timer = setInterval(() => {
                 cooldownDisplay.textContent = `[ Cooldown: ${left}ms ]`;
+                left -= 50;
 
                 if (left <= 0) {
-                    clearInterval(tick);
+                    clearInterval(timer);
                     cooldownDisplay.textContent = `[ Cooldown: 0ms ]`;
                     canSend = true;
                 }
