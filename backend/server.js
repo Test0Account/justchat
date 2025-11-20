@@ -1,32 +1,28 @@
 const WebSocket = require("ws");
-const server = new WebSocket.Server({
-    port: process.env.PORT || 3000
-});
 
-const rooms = {
+const port = process.env.PORT || 3000;
+const wss = new WebSocket.Server({ port });
+
+console.log("WebSocket running on port", port);
+
+let rooms = {
     server1: new Set(),
     server2: new Set()
 };
 
-console.log("WebSocket backend running...");
+wss.on("connection", (ws, req) => {
+    const path = req.url.replace("/", "");
+    const room = rooms[path] ? path : "server1";
 
-server.on("connection", (ws, req) => {
-    let roomName = req.url.replace("/", "");
-    if (!rooms[roomName]) roomName = "server1";
+    rooms[room].add(ws);
 
-    rooms[roomName].add(ws);
-
-    ws.send(`[SYSTEM] Joined ${roomName}`);
-
-    ws.on("message", (msg) => {
-        for (let client of rooms[roomName]) {
+    ws.on("message", msg => {
+        for (let client of rooms[room]) {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(msg.toString());
             }
         }
     });
 
-    ws.on("close", () => {
-        rooms[roomName].delete(ws);
-    });
+    ws.on("close", () => rooms[room].delete(ws));
 });
